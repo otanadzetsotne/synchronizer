@@ -22,7 +22,7 @@ Configuration parameters (YAML):
         ssd:    /Volumes/EXT/PROJ
     backup_root: /Volumes/EXT/.backups
     retention_days: 14
-    delete_policy: safe   # safe | mirror
+    delete_policy: safe   # safe | mirror | sync
 
 Dependencies: Python≥3.8, PyYAML (pip install pyyaml)
 """
@@ -31,8 +31,6 @@ import hashlib
 import logging
 import os
 import shutil
-import sys
-import time
 import tempfile
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -100,8 +98,10 @@ def build_diff(local: Dict[Path, FileMeta], ssd: Dict[Path, FileMeta], delete_po
         elif in_ssd and not in_local:
             if delete_policy == "mirror":
                 plan.append(("DELETE_SSD", rel))
-            else:
+            elif delete_policy == "sync":
                 plan.append(("COPY_SSD_TO_LOCAL", rel))
+            else:
+                pass
         else:  # both present
             l_meta = local[rel]
             s_meta = ssd[rel]
